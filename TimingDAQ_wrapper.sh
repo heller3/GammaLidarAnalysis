@@ -1,0 +1,1 @@
+/Users/heller/TimingDAQ/NetScopeStandaloneDat2Root --input_file=$1 --output_file=$2 --config=/Users/heller/TimingDAQ/config/VME_20220324.config --save_meas --N_evts=10000
