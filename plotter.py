@@ -52,14 +52,41 @@ plot_definitions = [
     "output_folder":"{}".format(base_plot_dir),
     "x_axis":"#DeltaT, start detectors [s]",
     "y_axis":"Entries",
-    "xbins":[30,-60e-12,100e-12],
+    "xbins":[50,-150e-12,150e-12],
     "draw_opt":"",
     "hist_list":[
         {
         "variable":"LP2_20[0]-LP2_20[7]",
         "selection":"LP2_20[0]!=0 && LP2_20[7]!=0",
         "legend":"Start detectors",
-        "color_index":1,
+        "color_index":2,
+        "input_file":input_file,
+        "fit":"gaus"
+        }
+    ]
+},
+{
+    "name":"start_det_dt_firstlast",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"#DeltaT, start detectors [s]",
+    "y_axis":"Entries",
+    "xbins":[30,-150e-12,150e-12],
+    "draw_opt":"",
+    "hist_list":[
+        {
+        "variable":"LP2_20[0]-LP2_20[7]",
+        "selection":"LP2_20[0]!=0 && LP2_20[7]!=0 && i_evt<600",
+        "legend":"Start detectors, first 10 min",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":"gaus"
+        },
+        {
+        "variable":"LP2_20[0]-LP2_20[7]",
+        "selection":"LP2_20[0]!=0 && LP2_20[7]!=0 && i_evt>({}-600)".format(total_events),
+        "legend":"Start detectors, last 10 min",
+        "color_index":3,
         "input_file":input_file,
         "fit":"gaus"
         }
@@ -74,14 +101,35 @@ plot_definitions = [
     "y_axis":"#DeltaT, start detectors [s]",
     "z_axis":"Entries",
     "xbins":[20,0,total_events],
-    "ybins":[20,-60e-12,100e-12],
+    "ybins":[30,-300e-12,300e-12],
     "draw_opt":"colz",
     "hist_list":[
         {
         "variable":"LP2_20[0]-LP2_20[7]:i_evt",
         "selection":"LP2_20[0]!=0 && LP2_20[7]!=0",
         "legend":"Start detectors",
-        "color_index":1,
+        "color_index":2,
+        "input_file":input_file,
+        "fit":""
+        }
+    ]
+},
+{
+    "name":"start_det_dt_RMS_vs_event",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"Event number",
+    "y_axis":"RMS of #DeltaT start detectors [s]",
+    "z_axis":"Entries",
+    "xbins":[20,0,total_events],
+    "ybins":[30,-300e-12,300e-12],
+    "draw_opt":"RMS",
+    "hist_list":[
+        {
+        "variable":"LP2_20[0]-LP2_20[7]:i_evt",
+        "selection":"LP2_20[0]!=0 && LP2_20[7]!=0",
+        "legend":"Start detectors",
+        "color_index":2,
         "input_file":input_file,
         "fit":""
         }

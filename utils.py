@@ -69,7 +69,7 @@ def make_plot(plot_definition):
     c.SetGridx()
     leg = ROOT.TLegend(0.15,0.68,0.89,0.89)
     leg.SetMargin(0.15)
-    leg.SetNColumns(2)
+    if len(plot_definition["hist_list"])>2: leg.SetNColumns(2)
     stack = ROOT.THStack()
     hists=[]
     two_dim_plot = "ybins" in plot_definition
@@ -84,14 +84,23 @@ def make_plot(plot_definition):
        
         ##Hack to achieve in-line profile behavior as in interactive root.
         if "prof" in plot_definition["draw_opt"]: hist = hist.ProfileX()
-
+        if "RMS" in plot_definition["draw_opt"]:
+            profile = hist.ProfileX()
+            RMS_hist = ROOT.TH1D("{}_RMS".format(histname),"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
+            for ibin in range(plot_definition["xbins"][0]+1):
+                RMS_hist.SetBinContent(ibin,profile.GetBinError(ibin)*pow(profile.GetBinEntries(ibin),0.5))
+            hist=RMS_hist
+            plot_definition["draw_opt"] = "hist"
+            
         hist.SetLineColor(colors[hist_dict["color_index"]])
         hist.SetLineWidth(2)
         stack.Add(hist)
         hists.append(hist)
         if "fit" in hist_dict and hist_dict["fit"]!="":
             fitfunc = ROOT.TF1("f{}".format(ih),hist_dict["fit"],plot_definition["xbins"][1],plot_definition["xbins"][2])
+            fitfunc.SetLineColor(colors[hist_dict["color_index"]])
             hist.Fit(fitfunc,"")
+
             if hist_dict["fit"] == "gaus": 
                 leg.AddEntry(hist, "{}, #sigma = {:.1f} #pm {:.1f} ps".format(hist_dict["legend"],1e12*fitfunc.GetParameter(2),1e12*fitfunc.GetParError(2)),"l")
         
@@ -104,7 +113,7 @@ def make_plot(plot_definition):
     else: stack.SetTitle(";{0};{1};{2}".format(plot_definition["x_axis"],plot_definition["y_axis"],plot_definition["z_axis"]))
 
     stack.Draw("nostack {}".format(plot_definition["draw_opt"]))
-    if len(plot_definition["hist_list"])>1: leg.Draw("same")
+    if "colz" not in plot_definition["draw_opt"]: leg.Draw("same")
     output_filename = "{0}/{1}_{2}.pdf".format(plot_definition["output_folder"],plot_definition["tag"],plot_definition["name"])
     latex= ROOT.TLatex()
     latex.SetTextFont(62)
