@@ -1,11 +1,13 @@
 import os, sys, re
 import ROOT
 
-def prep_dirs():
+def prep_dirs(base_dir):
     if not os.path.exists("plots"):
         os.makedirs("plots")	
-    if not os.path.exists("plots/plastic"):
-        os.makedirs("plots/plastic")	
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)	
+    if not os.path.exists("{}/plastic".format(base_dir)):
+        os.makedirs("{}/plastic".format(base_dir))	
 
 def set_style():
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -79,6 +81,10 @@ def make_plot(plot_definition):
         else:
             hist = ROOT.TH2D(histname,"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2],plot_definition["ybins"][0],plot_definition["ybins"][1],plot_definition["ybins"][2])
         hist_dict["input_file"].Project(histname,hist_dict["variable"],hist_dict["selection"])
+       
+        ##Hack to achieve in-line profile behavior as in interactive root.
+        if "prof" in plot_definition["draw_opt"]: hist = hist.ProfileX()
+
         hist.SetLineColor(colors[hist_dict["color_index"]])
         hist.SetLineWidth(2)
         stack.Add(hist)
@@ -98,15 +104,23 @@ def make_plot(plot_definition):
     else: stack.SetTitle(";{0};{1};{2}".format(plot_definition["x_axis"],plot_definition["y_axis"],plot_definition["z_axis"]))
 
     stack.Draw("nostack {}".format(plot_definition["draw_opt"]))
-    if not two_dim_plot: leg.Draw("same")
-    output_filename = "{0}/{1}.pdf".format(plot_definition["output_folder"],plot_definition["name"])
+    if len(plot_definition["hist_list"])>1: leg.Draw("same")
+    output_filename = "{0}/{1}_{2}.pdf".format(plot_definition["output_folder"],plot_definition["tag"],plot_definition["name"])
+    latex= ROOT.TLatex()
+    latex.SetTextFont(62)
+    latex.SetTextSize(0.04)
+    latex.DrawLatexNDC(0.73,0.91,plot_definition["tag"].replace("_"," "))
+
+
     c.Print(output_filename)
     if "log" in plot_definition: 
         c.SetLogy()
         stack.SetMaximum(20*stackmax)
         stack.Draw("nostack")
         leg.Draw("same")
-        output_filename = "{0}/{1}_log.pdf".format(plot_definition["output_folder"],plot_definition["name"])
+        output_filename = "{0}/{1}_{2}_log.pdf".format(plot_definition["output_folder"],plot_definition["tag"],plot_definition["name"])
+        latex.DrawLatexNDC(0.73,0.91,plot_definition["tag"].replace("_"," "))
+
         c.Print(output_filename)
 
     for hist in hists: hist.Delete()

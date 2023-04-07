@@ -12,8 +12,9 @@ samples_per_frame = 1024
 sampling_rate = 5 #GSa/s
 samples_per_header = 6
 sample_length = 4 #bits
-data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
-output_file = "Aug31_Run2.root"
+#data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
+data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run 3 Beam Monitor OUT/"
+output_file = "Aug31_Run3.root"
 
 
 def get_y_values(input_file,event_number):

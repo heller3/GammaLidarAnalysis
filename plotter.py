@@ -7,7 +7,7 @@ import argparse
 import utils
 
 utils.set_style()
-utils.prep_dirs()
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_file', type=str, required=True)
@@ -17,10 +17,17 @@ input_filename = args.input_file
 input_file = ROOT.TChain("pulse")
 input_file.Add(input_filename)
 
+tag = input_filename.replace(".root","").replace("_out","")
+base_plot_dir = "plots/{}/".format(tag)
+utils.prep_dirs(base_plot_dir)
 total_events = input_file.GetEntries()
 
 ADC_to_mV = 1000./4096.
 mV_to_keV = [1.975,2.212,2.212,2.212]
+
+cable_velocity = 0.659 * 299792458 #m/s
+start_detector_delay = 2.89 / cable_velocity #289 cm
+plastic_detector_delay = 0.914 / cable_velocity #3 ft = 91.4 cm
 
 plastics = [
     {"ch_E":20,"ch_t":4},
@@ -40,9 +47,10 @@ plastics = [
 
 plot_definitions = [
 {
-    "name":"start_time_res",
-    "output_folder":"plots/",
-    "x_axis":"#Delta T, start detectors [s]",
+    "name":"start_det_dt",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"#DeltaT, start detectors [s]",
     "y_axis":"Entries",
     "xbins":[30,-60e-12,100e-12],
     "draw_opt":"",
@@ -59,10 +67,11 @@ plot_definitions = [
 },
 
 {
-    "name":"start_time_res_vs_event",
-    "output_folder":"plots/",
+    "name":"start_det_dt_vs_event",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
     "x_axis":"Event number",
-    "y_axis":"#Delta T, start detectors [s]",
+    "y_axis":"#DeltaT, start detectors [s]",
     "z_axis":"Entries",
     "xbins":[20,0,total_events],
     "ybins":[20,-60e-12,100e-12],
@@ -80,7 +89,8 @@ plot_definitions = [
 },
 {
     "name":"plastic_energy_mV",
-    "output_folder":"plots/plastic/",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
     "x_axis":"Energy [mV]",
     "y_axis":"Entries",
     "xbins":[30,0,300],
@@ -100,7 +110,8 @@ plot_definitions = [
 
 {
     "name":"plastic_energy_keV",
-    "output_folder":"plots/plastic/",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
     "x_axis":"Energy [keV]",
     "y_axis":"Entries",
     "xbins":[30,0,250],
@@ -116,8 +127,47 @@ plot_definitions = [
             "input_file":input_file,
             "fit":""
         } for ip in range(len(plastics))]
-}
-
+},
+{
+    "name":"plastic_dt",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"#DeltaT, plastic - start [s]",
+    "y_axis":"Entries",
+    "xbins":[100,-1000e-12,20000e-12],
+    "draw_opt":"",
+    "log":"True",
+    "hist_list":[
+        
+        {
+            "variable":"(LP2_20[{ch}] - {p_dly}) - ( 0.5*(LP2_20[0]+LP2_20[7])-{s_dly}  )".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
+{
+    "name":"plastic_energy_keV_vs_event",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Event number",
+    "y_axis":"Mean energy [keV]",
+    "z_axis":"Entries",
+    "xbins":[20,0,total_events],
+    "ybins":[30,0,250],
+    "draw_opt":"prof",
+    "hist_list":[
+        {
+            "variable":"{}*amp[{}]:i_evt".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"{}*amp[{}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
 ]
 
 for plot_def in plot_definitions: utils.make_plot(plot_def)
