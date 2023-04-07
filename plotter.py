@@ -18,6 +18,7 @@ input_file = ROOT.TChain("pulse")
 input_file.Add(input_filename)
 
 ADC_to_mV = 1000./4096.
+mV_to_keV = [1.975,2.212,2.212,2.212]
 
 plastics = [
     {"ch_E":20,"ch_t":4},
@@ -53,20 +54,15 @@ plot_definitions = [
         "fit":"gaus"
         }
     ]
-    # "legend_list":["Start detectors"],
-    # "selection_list":["LP2_20[0]!=0 && LP2_20[7]!=0"],
-    # "variable_list":["LP2_20[0]-LP2_20[7]"],
-    # "color_list":[2],
-    # "inputs_list":[input_file],
-    # "fit_list":["gaus"]
 },
 {
-    "name":"plastic_energy",
+    "name":"plastic_energy_mV",
     "output_folder":"plots/plastic/",
     "x_axis":"Energy [mV]",
     "y_axis":"Entries",
     "xbins":[30,0,300],
     "draw_opt":"",
+    "log":"True",
     "hist_list":[
         
         {
@@ -77,24 +73,28 @@ plot_definitions = [
             "input_file":input_file,
             "fit":""
         } for ip in range(len(plastics))]
-        # {
-        #     "variable":"amp[7]",
-        #     "selection":"",
-        #     "legend":"Start detectors 7",
-        #     "color_index":2,
-        #     "input_file":input_file,
-        #     "fit":""
-        # },
-        # {
-        #     "variable":"amp[18]",
-        #     "selection":"",
-        #     "legend":"Other detector 18",
-        #     "color_index":3,
-        #     "input_file":input_file,
-        #     "fit":""
-        # },       
-    # ]
+},
+
+{
+    "name":"plastic_energy_keV",
+    "output_folder":"plots/plastic/",
+    "x_axis":"Energy [keV]",
+    "y_axis":"Entries",
+    "xbins":[30,0,250],
+    "draw_opt":"",
+    "log":"True",
+    "hist_list":[
+        
+        {
+            "variable":"{}*amp[{}]".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
 }
+
 ]
 
 for plot_def in plot_definitions: utils.make_plot(plot_def)

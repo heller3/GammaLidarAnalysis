@@ -69,6 +69,7 @@ def make_plot(plot_definition):
     leg.SetMargin(0.15)
     leg.SetNColumns(2)
     stack = ROOT.THStack()
+    hists=[]
     for ih in range(len((plot_definition["hist_list"]))):
         histname = "h{}".format(ih)
         hist_dict = plot_definition["hist_list"][ih]
@@ -77,6 +78,7 @@ def make_plot(plot_definition):
         hist.SetLineColor(colors[hist_dict["color_index"]])
         hist.SetLineWidth(2)
         stack.Add(hist)
+        hists.append(hist)
         if hist_dict["fit"] != "":
             fitfunc = ROOT.TF1("f{}".format(ih),hist_dict["fit"],plot_definition["xbins"][1],plot_definition["xbins"][2])
             hist.Fit(fitfunc,"")
@@ -86,43 +88,21 @@ def make_plot(plot_definition):
             leg.AddEntry(hist, "{}, #sigma = {:.1f} #pm {:.1f} ps".format(hist_dict["legend"],1e12*fitfunc.GetParameter(2),1e12*fitfunc.GetParError(2)),"l")
         else:
             leg.AddEntry(hist, hist_dict["legend"],"l")
-
-        # if ih==0: hist.Draw(plot_definition["draw_opt"])
-        # else: hist.Draw(plot_definition["draw_opt"] + " same")
-    stack.SetMaximum(1.5*stack.GetMaximum("nostack"))
+            
+    stackmax = stack.GetMaximum("nostack")
+    stack.SetMaximum(1.5*stackmax)
     stack.SetTitle(";{0};{1}".format(plot_definition["x_axis"],plot_definition["y_axis"]))
 
     stack.Draw("nostack")
     leg.Draw("same")
     output_filename = "{0}/{1}.pdf".format(plot_definition["output_folder"],plot_definition["name"])
     c.Print(output_filename)
+    if "log" in plot_definition: 
+        c.SetLogy()
+        stack.SetMaximum(20*stackmax)
+        stack.Draw("nostack")
+        leg.Draw("same")
+        output_filename = "{0}/{1}_log.pdf".format(plot_definition["output_folder"],plot_definition["name"])
+        c.Print(output_filename)
 
-
-# def make_plot(plot_definition):
-#     c = ROOT.TCanvas()
-#     c.SetGridy()
-#     c.SetGridx()
-#     leg = ROOT.TLegend(0.15,0.68,0.89,0.89)
-#     leg.SetMargin(0.15)
-#     leg.SetNColumns(2)
-#     stack = ROOT.THStack()
-#     for ih in range(len((plot_definition["variable_list"]))):
-#         histname = "h%i"%ih
-#         hist = ROOT.TH1D(histname,"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
-#         plot_definition["inputs_list"][ih].Project(histname,plot_definition["variable_list"][ih],plot_definition["selection_list"][ih])
-#         hist.SetTitle(";{0};{1}".format(plot_definition["x_axis"],plot_definition["y_axis"]))
-#         hist.SetLineColor(colors[ih])
-#         hist.SetLineWidth(2)
-#         stack.Add(hist)
-#         leg.AddEntry(hist, plot_definition["legend_list"][ih],"l")
-#         if plot_definition["fit_list"][ih] != "":
-            
-
-
-#         # if ih==0: hist.Draw(plot_definition["draw_opt"])
-#         # else: hist.Draw(plot_definition["draw_opt"] + " same")
-#     stack.SetMaximum(1.5*stack.GetMaximum("nostack"))
-#     stack.Draw("nostack")
-#     leg.Draw("same")
-#     output_filename = "{0}/{1}.pdf".format(plot_definition["output_folder"],plot_definition["name"])
-#     c.Print(output_filename)
+    for hist in hists: hist.Delete()
