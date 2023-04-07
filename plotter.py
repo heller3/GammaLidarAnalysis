@@ -216,6 +216,27 @@ plot_definitions = [
             "fit":""
         } for ip in range(len(plastics))]
 },
+
+{
+    "name":"plastic_expected_jitter",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Expected rising edge jitter [ps]",
+    "y_axis":"Entries",
+    "xbins":[100,-5,50],
+    "draw_opt":"",
+    "log":"True",
+    "hist_list":[
+        
+        {
+            "variable":"-1e12*baseline_RMS[{}]/risetime[{}]".format(plastics[ip]["ch_t"],plastics[ip]["ch_t"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
 ]
 
 for plot_def in plot_definitions: utils.make_plot(plot_def)
