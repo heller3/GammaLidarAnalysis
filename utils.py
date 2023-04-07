@@ -70,31 +70,35 @@ def make_plot(plot_definition):
     leg.SetNColumns(2)
     stack = ROOT.THStack()
     hists=[]
+    two_dim_plot = "ybins" in plot_definition
     for ih in range(len((plot_definition["hist_list"]))):
         histname = "h{}".format(ih)
         hist_dict = plot_definition["hist_list"][ih]
-        hist = ROOT.TH1D(histname,"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
+        if not two_dim_plot:
+            hist = ROOT.TH1D(histname,"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
+        else:
+            hist = ROOT.TH2D(histname,"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2],plot_definition["ybins"][0],plot_definition["ybins"][1],plot_definition["ybins"][2])
         hist_dict["input_file"].Project(histname,hist_dict["variable"],hist_dict["selection"])
         hist.SetLineColor(colors[hist_dict["color_index"]])
         hist.SetLineWidth(2)
         stack.Add(hist)
         hists.append(hist)
-        if hist_dict["fit"] != "":
+        if "fit" in hist_dict and hist_dict["fit"]!="":
             fitfunc = ROOT.TF1("f{}".format(ih),hist_dict["fit"],plot_definition["xbins"][1],plot_definition["xbins"][2])
             hist.Fit(fitfunc,"")
+            if hist_dict["fit"] == "gaus": 
+                leg.AddEntry(hist, "{}, #sigma = {:.1f} #pm {:.1f} ps".format(hist_dict["legend"],1e12*fitfunc.GetParameter(2),1e12*fitfunc.GetParError(2)),"l")
         
-
-        if hist_dict["fit"] == "gaus": 
-            leg.AddEntry(hist, "{}, #sigma = {:.1f} #pm {:.1f} ps".format(hist_dict["legend"],1e12*fitfunc.GetParameter(2),1e12*fitfunc.GetParError(2)),"l")
         else:
             leg.AddEntry(hist, hist_dict["legend"],"l")
-            
+
     stackmax = stack.GetMaximum("nostack")
     stack.SetMaximum(1.5*stackmax)
-    stack.SetTitle(";{0};{1}".format(plot_definition["x_axis"],plot_definition["y_axis"]))
+    if not two_dim_plot: stack.SetTitle(";{0};{1}".format(plot_definition["x_axis"],plot_definition["y_axis"]))
+    else: stack.SetTitle(";{0};{1};{2}".format(plot_definition["x_axis"],plot_definition["y_axis"],plot_definition["z_axis"]))
 
-    stack.Draw("nostack")
-    leg.Draw("same")
+    stack.Draw("nostack {}".format(plot_definition["draw_opt"]))
+    if not two_dim_plot: leg.Draw("same")
     output_filename = "{0}/{1}.pdf".format(plot_definition["output_folder"],plot_definition["name"])
     c.Print(output_filename)
     if "log" in plot_definition: 

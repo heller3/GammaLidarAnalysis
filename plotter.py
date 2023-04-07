@@ -17,6 +17,8 @@ input_filename = args.input_file
 input_file = ROOT.TChain("pulse")
 input_file.Add(input_filename)
 
+total_events = input_file.GetEntries()
+
 ADC_to_mV = 1000./4096.
 mV_to_keV = [1.975,2.212,2.212,2.212]
 
@@ -52,6 +54,27 @@ plot_definitions = [
         "color_index":1,
         "input_file":input_file,
         "fit":"gaus"
+        }
+    ]
+},
+
+{
+    "name":"start_time_res_vs_event",
+    "output_folder":"plots/",
+    "x_axis":"Event number",
+    "y_axis":"#Delta T, start detectors [s]",
+    "z_axis":"Entries",
+    "xbins":[20,0,total_events],
+    "ybins":[20,-60e-12,100e-12],
+    "draw_opt":"colz",
+    "hist_list":[
+        {
+        "variable":"LP2_20[0]-LP2_20[7]:i_evt",
+        "selection":"LP2_20[0]!=0 && LP2_20[7]!=0",
+        "legend":"Start detectors",
+        "color_index":1,
+        "input_file":input_file,
+        "fit":""
         }
     ]
 },
