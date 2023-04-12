@@ -26,6 +26,7 @@ ADC_to_mV = 1000./4096.
 mV_to_keV = [1.975,2.212,2.212,2.212]
 
 cable_velocity = 0.659 * 299792458 #m/s
+cable_velocity = 1.0 * 299792458 #m/s
 start_detector_delay = 2.89 / cable_velocity #289 cm
 plastic_detector_delay = 0.914 / cable_velocity #3 ft = 91.4 cm
 
@@ -66,12 +67,39 @@ plot_definitions = [
     ]
 },
 {
+    "name":"start_det_ToA",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"#DeltaT, start detectors [s]",
+    "y_axis":"Entries",
+    "xbins":[103,0,206],
+    "draw_opt":"",
+    "hist_list":[
+        {
+        "variable":"1e9*LP2_50[0]",
+        "selection":"LP2_50[0]!=0",
+        "legend":"Start detector 1",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":""
+        },
+                {
+        "variable":"1e9*LP2_50[7]",
+        "selection":"LP2_50[7]!=0",
+        "legend":"Start detector 2",
+        "color_index":3,
+        "input_file":input_file,
+        "fit":""
+        }
+    ]
+},
+{
     "name":"start_det_dt_firstlast",
     "tag":tag,
     "output_folder":"{}".format(base_plot_dir),
     "x_axis":"#DeltaT, start detectors [s]",
     "y_axis":"Entries",
-    "xbins":[30,-150e-12,150e-12],
+    "xbins":[30,-200e-12,200e-12],
     "draw_opt":"",
     "hist_list":[
         {
@@ -115,6 +143,27 @@ plot_definitions = [
     ]
 },
 {
+    "name":"start_det_expected_jitter_vs_event",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"Event number",
+    "y_axis":"Expected jitter, start detector [ps]",
+    "z_axis":"Entries",
+    "xbins":[20,0,total_events],
+    "ybins":[30,0,20],
+    "draw_opt":"colz",
+    "hist_list":[
+        {
+        "variable":"-1e12*baseline_RMS[0]/risetime[0]:i_evt",
+        "selection":"",
+        "legend":"Start detectors",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":""
+        }
+    ]
+},
+{
     "name":"start_det_dt_RMS_vs_event",
     "tag":tag,
     "output_folder":"{}".format(base_plot_dir),
@@ -124,6 +173,27 @@ plot_definitions = [
     "xbins":[20,0,total_events],
     "ybins":[30,-300e-12,300e-12],
     "draw_opt":"RMS",
+    "hist_list":[
+        {
+        "variable":"LP2_20[0]-LP2_20[7]:i_evt",
+        "selection":"LP2_20[0]!=0 && LP2_20[7]!=0",
+        "legend":"Start detectors",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":""
+        }
+    ]
+},
+{
+    "name":"start_det_dt_res_vs_x",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"Event number",
+    "y_axis":"Start detector resolution, FWHM / #sqrt{2} [ps]",
+    "z_axis":"Entries",
+    "xbins":[12,0,total_events],
+    "ybins":[30,-300e-12,300e-12],
+    "draw_opt":"res_vs_x",
     "hist_list":[
         {
         "variable":"LP2_20[0]-LP2_20[7]:i_evt",
@@ -188,13 +258,56 @@ plot_definitions = [
     "hist_list":[
         
         {
-            "variable":"(LP2_20[{ch}] - {p_dly}) - ( 0.5*(LP2_20[0]+LP2_20[7])-{s_dly}  )".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
-            "selection":"",
+            "variable":"(LP2_50[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
+            "selection":"{0}*amp[{1}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
             "input_file":input_file,
             "fit":""
         } for ip in range(len(plastics))]
+        # } for ip in range(1)]
+},
+{
+    "name":"plastic_dt_raw",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"#DeltaT, plastic - start [s]",
+    "y_axis":"Entries",
+    "xbins":[100,-40000e-12,40000e-12],
+    "draw_opt":"",
+    "log":"True",
+    "hist_list":[
+        
+        {
+            "variable":"(LP2_50[{ch}]) - ( 0.5*(LP2_50[0]+LP2_50[7])  )".format(ch = plastics[ip]["ch_t"]),
+            "selection":"{0}*amp[{1}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+        # } for ip in range(1)]
+},
+{
+    "name":"plastic_ToA",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Plastic ToA [ns]",
+    "y_axis":"Entries",
+    "xbins":[103,0,206],
+    "draw_opt":"",
+    "log":"True",
+    "hist_list":[
+        
+        {
+            "variable":"1e9*LP2_50[{ch}]".format(ch = plastics[ip]["ch_t"]),
+            "selection":"{0}*amp[{1}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+        # } for ip in range(1)]
 },
 {
     "name":"plastic_energy_keV_vs_event",

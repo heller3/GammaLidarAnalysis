@@ -84,7 +84,22 @@ def make_plot(plot_definition):
        
         ##Hack to achieve in-line profile behavior as in interactive root.
         if "prof" in plot_definition["draw_opt"]: hist = hist.ProfileX()
+        if "res_vs_x" in plot_definition["draw_opt"]:
+            ##replace y values with FWHM/sqrt(2) from gaus fit of y values in each bin of x.
+            sigma_hist = ROOT.TH1D("{}_RMS".format(histname),"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
+            for ibin in range(plot_definition["xbins"][0]+1):
+                this_slice = hist.ProjectionY("project_{}".format(ibin),ibin,ibin)
+                fitfunc = ROOT.TF1("f{}".format(ibin),"gaus",plot_definition["ybins"][1],plot_definition["ybins"][2])
+                this_slice.Fit(fitfunc,"")
+                sigma_hist.SetBinContent(ibin,2.355*(1./1.4142)*1e12*fitfunc.GetParameter(2))
+                sigma_hist.SetBinError(ibin,2.355*(1./1.4142)*1e12*fitfunc.GetParError(2))
+            hist=sigma_hist
+            hist.SetMarkerStyle(20)
+            plot_definition["draw_opt"] = "ep"
+
+
         if "RMS" in plot_definition["draw_opt"]:
+            ### replace y values with RMS of y values in each bin of X
             profile = hist.ProfileX()
             RMS_hist = ROOT.TH1D("{}_RMS".format(histname),"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
             for ibin in range(plot_definition["xbins"][0]+1):
@@ -94,6 +109,7 @@ def make_plot(plot_definition):
             
         hist.SetLineColor(colors[hist_dict["color_index"]])
         hist.SetLineWidth(2)
+        hist.SetMarkerColor(colors[hist_dict["color_index"]])
         stack.Add(hist)
         hists.append(hist)
         if "fit" in hist_dict and hist_dict["fit"]!="":
@@ -101,8 +117,17 @@ def make_plot(plot_definition):
             fitfunc.SetLineColor(colors[hist_dict["color_index"]])
             hist.Fit(fitfunc,"")
 
+            ## restrict fit range within +- 2 sigma and fit again.
             if hist_dict["fit"] == "gaus": 
-                leg.AddEntry(hist, "{}, #sigma = {:.1f} #pm {:.1f} ps".format(hist_dict["legend"],1e12*fitfunc.GetParameter(2),1e12*fitfunc.GetParError(2)),"l")
+                fit_lo_x = fitfunc.GetParameter(1) - 2*fitfunc.GetParameter(2)
+                fit_hi_x = fitfunc.GetParameter(1) + 2*fitfunc.GetParameter(2)
+                fitfunc.SetRange(fit_lo_x,fit_hi_x)
+                hist.Fit(fitfunc,"","",fit_lo_x,fit_hi_x)
+
+
+            if hist_dict["fit"] == "gaus": 
+                # leg.AddEntry(hist, "{}, #sigma = {:.1f} #pm {:.1f} ps, FWHM / sqrt(2) = {:.1f}".format(hist_dict["legend"],1e12*fitfunc.GetParameter(2),1e12*fitfunc.GetParError(2),2.355*(1./1.4142)*1e12*fitfunc.GetParameter(2)),"l")
+                leg.AddEntry(hist, "{}. FWHM / sqrt(2) = {:.1f} #pm {:.1f} ps".format(hist_dict["legend"],2.355*(1./1.4142)*1e12*fitfunc.GetParameter(2),2.355*(1./1.4142)*1e12*fitfunc.GetParError(2)),"l")
         
         else:
             leg.AddEntry(hist, hist_dict["legend"],"l")
