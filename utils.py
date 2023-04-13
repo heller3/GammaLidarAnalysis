@@ -82,8 +82,15 @@ def make_plot(plot_definition):
             hist = ROOT.TH2D(histname,"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2],plot_definition["ybins"][0],plot_definition["ybins"][1],plot_definition["ybins"][2])
         hist_dict["input_file"].Project(histname,hist_dict["variable"],hist_dict["selection"])
        
+        if not two_dim_plot:
+            ### add overflow to last bin
+            hist.SetBinContent(plot_definition["xbins"][0],hist.GetBinContent(plot_definition["xbins"][0]+1)+hist.GetBinContent(plot_definition["xbins"][0]))
+
         ##Hack to achieve in-line profile behavior as in interactive root.
         if "prof" in plot_definition["draw_opt"]: hist = hist.ProfileX()
+
+        if "norm" in plot_definition["draw_opt"]: 
+            hist.Scale(1./hist.Integral())
         if "res_vs_x" in plot_definition["draw_opt"]:
             ##replace y values with FWHM/sqrt(2) from gaus fit of y values in each bin of x.
             sigma_hist = ROOT.TH1D("{}_RMS".format(histname),"",plot_definition["xbins"][0],plot_definition["xbins"][1],plot_definition["xbins"][2])
@@ -134,7 +141,7 @@ def make_plot(plot_definition):
 
     stackmax = stack.GetMaximum("nostack")
     stack.SetMaximum(1.5*stackmax)
-    if not two_dim_plot: stack.SetTitle(";{0};{1}".format(plot_definition["x_axis"],plot_definition["y_axis"]))
+    if not two_dim_plot or "z_axis" not in plot_definition: stack.SetTitle(";{0};{1}".format(plot_definition["x_axis"],plot_definition["y_axis"]))
     else: stack.SetTitle(";{0};{1};{2}".format(plot_definition["x_axis"],plot_definition["y_axis"],plot_definition["z_axis"]))
 
     stack.Draw("nostack {}".format(plot_definition["draw_opt"]))
@@ -147,7 +154,7 @@ def make_plot(plot_definition):
 
 
     c.Print(output_filename)
-    if "log" in plot_definition: 
+    if "log" in plot_definition and plot_definition["log"]: 
         c.SetLogy()
         stack.SetMaximum(20*stackmax)
         stack.Draw("nostack")

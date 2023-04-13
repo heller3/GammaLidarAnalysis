@@ -22,7 +22,6 @@ base_plot_dir = "plots/{}/".format(tag)
 utils.prep_dirs(base_plot_dir)
 total_events = input_file.GetEntries()
 
-ADC_to_mV = 1000./4096.
 mV_to_keV = [1.975,2.212,2.212,2.212]
 
 cable_velocity = 0.659 * 299792458 #m/s
@@ -120,7 +119,60 @@ plot_definitions = [
         }
     ]
 },
-
+{
+    "name":"start_det_dt_firstlast_200mV",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"#DeltaT, start detectors [s]",
+    "y_axis":"Entries",
+    "xbins":[30,-200e-12,200e-12],
+    "draw_opt":"",
+    "hist_list":[
+        {
+        "variable":"LP2_200mV[0]-LP2_200mV[7]",
+        "selection":"LP2_200mV[0]!=0 && LP2_200mV[7]!=0 && i_evt<600",
+        "legend":"Start detectors, first 10 min",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":"gaus"
+        },
+        {
+        "variable":"LP2_200mV[0]-LP2_200mV[7]",
+        "selection":"LP2_200mV[0]!=0 && LP2_200mV[7]!=0 && i_evt>({}-600)".format(total_events),
+        "legend":"Start detectors, last 10 min",
+        "color_index":3,
+        "input_file":input_file,
+        "fit":"gaus"
+        }
+    ]
+},
+{
+    "name":"start_det_dt_firstlast_100mV",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"#DeltaT, start detectors [s]",
+    "y_axis":"Entries",
+    "xbins":[30,-200e-12,200e-12],
+    "draw_opt":"",
+    "hist_list":[
+        {
+        "variable":"LP2_100mV[0]-LP2_100mV[7]",
+        "selection":"LP2_100mV[0]!=0 && LP2_100mV[7]!=0 && i_evt<600",
+        "legend":"Start detectors, first 10 min",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":"gaus"
+        },
+        {
+        "variable":"LP2_100mV[0]-LP2_100mV[7]",
+        "selection":"LP2_100mV[0]!=0 && LP2_100mV[7]!=0 && i_evt>({}-600)".format(total_events),
+        "legend":"Start detectors, last 10 min",
+        "color_index":3,
+        "input_file":input_file,
+        "fit":"gaus"
+        }
+    ]
+},
 {
     "name":"start_det_dt_vs_event",
     "tag":tag,
@@ -213,11 +265,11 @@ plot_definitions = [
     "y_axis":"Entries",
     "xbins":[30,0,300],
     "draw_opt":"",
-    "log":"True",
+    "log":True,
     "hist_list":[
         
         {
-            "variable":"{}*amp[{}]".format(ADC_to_mV, plastics[ip]["ch_E"]),
+            "variable":"amp[{}]".format(plastics[ip]["ch_E"]),
             "selection":"",
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
@@ -234,11 +286,179 @@ plot_definitions = [
     "y_axis":"Entries",
     "xbins":[30,0,250],
     "draw_opt":"",
-    "log":"True",
+    "log":True,
     "hist_list":[
         
         {
-            "variable":"{}*amp[{}]".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "variable":"{}*amp[{}]".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
+{
+    "name":"plastic_energy_keV_unzoom",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy [keV]",
+    "y_axis":"Entries",
+    "xbins":[40,0,2000],
+    "draw_opt":"",
+    "log":True,
+    "hist_list":[
+        
+        {
+            "variable":"{}*amp[{}]".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
+{
+    "name":"plastic_energy_keV",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy [keV]",
+    "y_axis":"Entries",
+    "xbins":[30,0,250],
+    "draw_opt":"",
+    "log":True,
+    "hist_list":[
+        
+        {
+            "variable":"{}*amp[{}]".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
+{
+    "name":"plastic_energy_vs_amp_time",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy [keV]",
+    "y_axis":"Fast readout amplitude [mV]",
+    "z_axis":"Entries",
+    "xbins":[40,0,200],
+    "ybins":[40,0,1000],
+    "draw_opt":"colz",
+    "log":False,
+    "hist_list":[
+        {
+            "variable":"amp[{}]:{}*amp[{}]".format(plastics[ip]["ch_t"],mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(1)]
+},
+{
+    "name":"plastic_time_slew_200mV",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy [keV]",
+    "y_axis":"LE time 200 mV, w.r.t. start [ns]",
+    "z_axis":"Entries",
+    "xbins":[40,0,200],
+    "ybins":[100,-1000e-12,20000e-12],
+    "draw_opt":"colz",
+    "log":False,
+    "hist_list":[
+        {
+            "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  ):{conv}*amp[{chE}]".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay,conv=mV_to_keV[ip], chE=plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(1)]
+},
+{
+    "name":"plastic_time_slew_CFD",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy [keV]",
+    "y_axis":"LE time 20%, w.r.t. start [ns]",
+    "z_axis":"Entries",
+    "xbins":[40,0,200],
+    "ybins":[100,-1000e-12,20000e-12],
+    "draw_opt":"colz",
+    "log":False,
+    "hist_list":[
+        {
+            "variable":"(LP2_20[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  ):{conv}*amp[{chE}]".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay,conv=mV_to_keV[ip], chE=plastics[ip]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(1)]
+},
+{
+    "name":"plastic_time_slew_prof",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy [keV]",
+    "y_axis":"LE time w.r.t. start [ns]",
+    "z_axis":"Entries",
+    "xbins":[40,0,200],
+    "ybins":[100,-1000e-12,20000e-12],
+    "draw_opt":"prof",
+    "hist_list":[
+        {
+            "variable":"(LP2_20[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  ):{conv}*amp[{chE}]".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay,conv=mV_to_keV[0], chE=plastics[0]["ch_E"]),
+            "selection":"",
+            "legend":"CFD 20%",
+            "color_index":1,
+            "input_file":input_file,
+            "fit":""
+        }, 
+             {
+            "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  ):{conv}*amp[{chE}]".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay,conv=mV_to_keV[0], chE=plastics[0]["ch_E"]),
+            "selection":"",
+            "legend":"LE 200 mV",
+            "color_index":2,
+            "input_file":input_file,
+            "fit":""
+        } ,
+    ]
+},
+{
+    "name":"plastic_dt_100to700mV",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Risetime, 100 to 700 mV [ns]",
+    "y_axis":"Entries",
+    "xbins":[50,-3e-9,7e-9],
+    "draw_opt":"hist",
+    "hist_list":[
+        {
+            "variable":"LP2_700mV[{ch}] - LP2_100mV[{ch}]".format(ch = plastics[ip]["ch_t"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+},
+{
+    "name":"plastic_time_amp",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Amplitude [mV]",
+    "y_axis":"Entries",
+    "xbins":[50,0,1000],
+    "draw_opt":"hist",
+    "hist_list":[
+        {
+            "variable":"amp[{ch}]".format(ch = plastics[ip]["ch_t"]),
             "selection":"",
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
@@ -254,18 +474,68 @@ plot_definitions = [
     "y_axis":"Entries",
     "xbins":[100,-1000e-12,20000e-12],
     "draw_opt":"",
-    "log":"True",
+    "log":True,
     "hist_list":[
         
         {
             "variable":"(LP2_50[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
-            "selection":"{0}*amp[{1}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"{0}*amp[{1}] <  100".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
             "input_file":input_file,
             "fit":""
         } for ip in range(len(plastics))]
         # } for ip in range(1)]
+},
+{
+    "name":"plastic_dt_clean",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"#DeltaT, plastic - start [s]",
+    "y_axis":"Entries",
+    "xbins":[100,-1000e-12,20000e-12],
+    "draw_opt":"",
+    "log":True,
+    "hist_list":[
+        
+        {
+            "variable":"(LP2_50[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
+            "selection":"{0}*amp[{1}] <  100 && (LP2_700mV[{2}] - LP2_100mV[{2}])<1e-9".format(mV_to_keV[ip], plastics[ip]["ch_E"],plastics[ip]["ch_t"]),
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(len(plastics))]
+        # } for ip in range(1)]
+},
+{
+    "name":"plastic_dt_clean_vs_not",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"#DeltaT, plastic - start [s]",
+    "y_axis":"Entries",
+    "xbins":[100,-1000e-12,20000e-12],
+    "draw_opt":"norm",
+    "log":True,
+    "hist_list":[
+        
+        {
+            "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
+            "selection":"{0}*amp[{1}] <  100 && (LP2_700mV[{2}] - LP2_100mV[{2}])<1e-9".format(mV_to_keV[0], plastics[0]["ch_E"],plastics[0]["ch_t"]),
+            "legend":"Plastic, {0} cleaned".format(0),
+            "color_index":0,
+            "input_file":input_file,
+            "fit":""
+        },
+                {
+            "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
+            "selection":"{0}*amp[{1}] <  100 ".format(mV_to_keV[0], plastics[0]["ch_E"],plastics[0]["ch_t"]),
+            "legend":"Plastic {}, all".format(0),
+            "color_index":1,
+            "input_file":input_file,
+            "fit":""
+        }  
+    ]
 },
 {
     "name":"plastic_dt_raw",
@@ -275,12 +545,12 @@ plot_definitions = [
     "y_axis":"Entries",
     "xbins":[100,-40000e-12,40000e-12],
     "draw_opt":"",
-    "log":"True",
+    "log":True,
     "hist_list":[
         
         {
             "variable":"(LP2_50[{ch}]) - ( 0.5*(LP2_50[0]+LP2_50[7])  )".format(ch = plastics[ip]["ch_t"]),
-            "selection":"{0}*amp[{1}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"{0}*amp[{1}] <  100".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
             "input_file":input_file,
@@ -296,12 +566,12 @@ plot_definitions = [
     "y_axis":"Entries",
     "xbins":[103,0,206],
     "draw_opt":"",
-    "log":"True",
+    "log":True,
     "hist_list":[
         
         {
             "variable":"1e9*LP2_50[{ch}]".format(ch = plastics[ip]["ch_t"]),
-            "selection":"{0}*amp[{1}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"{0}*amp[{1}] <  100".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
             "input_file":input_file,
@@ -321,8 +591,8 @@ plot_definitions = [
     "draw_opt":"prof",
     "hist_list":[
         {
-            "variable":"{}*amp[{}]:i_evt".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
-            "selection":"{}*amp[{}] <  100".format(ADC_to_mV*mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "variable":"{}*amp[{}]:i_evt".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
+            "selection":"{}*amp[{}] <  100".format(mV_to_keV[ip], plastics[ip]["ch_E"]),
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
             "input_file":input_file,
@@ -338,7 +608,7 @@ plot_definitions = [
     "y_axis":"Entries",
     "xbins":[100,-5,50],
     "draw_opt":"",
-    "log":"True",
+    "log":True,
     "hist_list":[
         
         {

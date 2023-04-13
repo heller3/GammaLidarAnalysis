@@ -14,9 +14,10 @@ samples_per_frame = 1024
 sampling_rate = 5 #GSa/s
 samples_per_header = 6 ## e.g. number of 4 byte chunks in header
 sample_length = 4 #bytes
-data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
-# data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run 3 Beam Monitor OUT/"
-output_file = "Aug31_Run2.root"
+ADC_to_mV = 1000./4096.
+# data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
+data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run 3 Beam Monitor OUT/"
+output_file = "Aug31_Run3.root"
 time_calibration_file = "V1742_tcal_v2"
 time_calibration_file_triggers = "V1742_trigger_tcal_v1"
 
@@ -43,7 +44,7 @@ def get_y_values(input_file,event_number):
     my_file.seek((event_number+1)*sample_length*samples_per_header + event_number*sample_length*samples_per_frame)
     raw_event = my_file.read(sample_length*samples_per_frame)
     y_axis_raw = struct.unpack("<"+str(samples_per_frame)+"f", raw_event)
-    y_axis_in_V = [y * 0.001 for y in y_axis_raw] ### mV to V conversion
+    y_axis_in_V = [y * 0.001 * ADC_to_mV for y in y_axis_raw] ### mV to V conversion
     return y_axis_in_V
 
 def load_time_calibrations():
