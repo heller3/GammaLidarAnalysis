@@ -428,7 +428,57 @@ plot_definitions = [
             "input_file":input_file,
             "fit":""
         } ,
+                     {
+            "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  ):{conv}*amp[{chE}]".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay,conv=mV_to_keV[0], chE=plastics[2]["ch_E"]),
+            "selection":"",
+            "legend":"LE 200 mV vs wrong channel",
+            "color_index":3,
+            "input_file":input_file,
+            "fit":""
+        } ,
     ]
+},
+{
+    "name":"plastic_energy_corr",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy 0 [keV]",
+    "y_axis":"Energy 2 [keV]",
+    "z_axis":"Entries",
+    "xbins":[40,0,100],
+    "ybins":[40,0,100],
+    "draw_opt":"colz",
+    "log":False,
+    "hist_list":[
+        {
+            "variable":"{conv}*amp[{chEy}]:{conv}*amp[{chEx}]".format(conv=mV_to_keV[ip], chEy=plastics[2]["ch_E"],chEx=plastics[0]["ch_E"]),
+            "selection":"",
+            "legend":"Plastic {}".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(1)]
+},
+{
+    "name":"plastic_energy_corr_prof",
+    "tag":tag,
+    "output_folder":"{}/plastic/".format(base_plot_dir),
+    "x_axis":"Energy 0 [keV]",
+    "y_axis":"Energy X [keV]",
+    "z_axis":"Entries",
+    "xbins":[40,0,100],
+    "ybins":[40,0,100],
+    "draw_opt":"prof",
+    "log":False,
+    "hist_list":[
+        {
+            "variable":"{conv}*amp[{chEy}]:{conv}*amp[{chEx}]".format(conv=mV_to_keV[ip], chEy=plastics[ip]["ch_E"],chEx=plastics[0]["ch_E"]),
+            "selection":"",
+            "legend":"Energy {} vs Energy 0".format(ip),
+            "color_index":ip,
+            "input_file":input_file,
+            "fit":""
+        } for ip in range(1,4)]
 },
 {
     "name":"plastic_dt_100to700mV",
@@ -500,7 +550,7 @@ plot_definitions = [
         
         {
             "variable":"(LP2_50[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[ip]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
-            "selection":"{0}*amp[{1}] <  100 && (LP2_700mV[{2}] - LP2_100mV[{2}])<1e-9".format(mV_to_keV[ip], plastics[ip]["ch_E"],plastics[ip]["ch_t"]),
+            "selection":"{0}*amp[{1}] <  100 && (LP2_700mV[{2}] - LP2_100mV[{2}])<1.2e-9".format(mV_to_keV[ip], plastics[ip]["ch_E"],plastics[ip]["ch_t"]),
             "legend":"Plastic {}".format(ip),
             "color_index":ip,
             "input_file":input_file,
@@ -521,7 +571,7 @@ plot_definitions = [
         
         {
             "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
-            "selection":"{0}*amp[{1}] <  100 && (LP2_700mV[{2}] - LP2_100mV[{2}])<1e-9".format(mV_to_keV[0], plastics[0]["ch_E"],plastics[0]["ch_t"]),
+            "selection":"{0}*amp[{1}] <  60 && (LP2_700mV[{2}] - LP2_100mV[{2}])<1.2e-9".format(mV_to_keV[0], plastics[0]["ch_E"],plastics[0]["ch_t"]),
             "legend":"Plastic, {0} cleaned".format(0),
             "color_index":0,
             "input_file":input_file,
@@ -529,7 +579,7 @@ plot_definitions = [
         },
                 {
             "variable":"(LP2_200mV[{ch}] - {p_dly}) - ( 0.5*(LP2_50[0]+LP2_50[7])-{s_dly}  )".format(ch = plastics[0]["ch_t"],p_dly=plastic_detector_delay,s_dly=start_detector_delay),
-            "selection":"{0}*amp[{1}] <  100 ".format(mV_to_keV[0], plastics[0]["ch_E"],plastics[0]["ch_t"]),
+            "selection":"{0}*amp[{1}] <  60 ".format(mV_to_keV[0], plastics[0]["ch_E"],plastics[0]["ch_t"]),
             "legend":"Plastic {}, all".format(0),
             "color_index":1,
             "input_file":input_file,
