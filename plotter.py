@@ -195,6 +195,27 @@ plot_definitions = [
     ]
 },
 {
+    "name":"start_det_dt_RMS_vs_tcell",
+    "tag":tag,
+    "output_folder":"{}".format(base_plot_dir),
+    "x_axis":"Trigger cell",
+    "y_axis":"#DeltaT, start detectors [s]",
+    "z_axis":"Entries",
+    "xbins":[16,0,1024],
+    "ybins":[30,-300e-12,300e-12],
+    "draw_opt":"RMS",
+    "hist_list":[
+        {
+        "variable":"LP2_20[0]-LP2_20[7]:trigger_cell[0]",
+        "selection":"LP2_20[0]!=0 && LP2_20[7]!=0 && i_evt<2400",
+        "legend":"Start detectors",
+        "color_index":2,
+        "input_file":input_file,
+        "fit":""
+        }
+    ]
+},
+{
     "name":"start_det_expected_jitter_vs_event",
     "tag":tag,
     "output_folder":"{}".format(base_plot_dir),

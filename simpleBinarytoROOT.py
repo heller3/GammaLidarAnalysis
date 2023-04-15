@@ -17,9 +17,15 @@ sample_length = 4 #bytes
 ADC_to_mV = 1000./4096.
 # data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
 data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run 3 Beam Monitor OUT/"
-output_file = "Aug31_Run3.root"
+# data_path = "/Users/heller/Google Drive/Shared drives/BGO TOF-PET/Data/V1742 Calibration Work/8-20-2021/"
 time_calibration_file = "V1742_tcal_v2"
 time_calibration_file_triggers = "V1742_trigger_tcal_v1"
+skip_time_calibration=False
+output_file = "Aug31_Run3_calibrated_apr14_Ryan_inter.root"
+
+if skip_time_calibration: output_file = output_file.replace(".root","_uncal.root")
+
+nwarnings=0
 
 def dump_header_info(input_file,event_number,ch):
     my_file = open(input_file, 'rb')
@@ -30,14 +36,17 @@ def dump_header_info(input_file,event_number,ch):
    # if(header_unpack[4]!=event_number): print("[WARNING] Event number mismatch with binary data, ${}".format(input_file))
     #return header_unpack[3]
 
-def get_trigger_cell(input_file,event_number,ch):
+def get_trigger_cell_and_event(input_file,event_number,ch,nwarnings):
     my_file = open(input_file, 'rb')
     my_file.seek((event_number)*sample_length*samples_per_header + event_number*sample_length*samples_per_frame)
     header = my_file.read(sample_length*samples_per_header)
     header_unpack = struct.unpack("<"+str(samples_per_header)+"i", header)
   #  print("Header from event %i ch %i is: "%(event_number,ch), header_unpack)
-    if(header_unpack[4]!=event_number): print("[WARNING] Event number mismatch with binary data, ${}".format(input_file))
-    return header_unpack[3]
+    # if(header_unpack[4]!=event_number and nwarnings<10): 
+    #     print("[WARNING] Event number mismatch with binary data,{} vs {}, {}".format(header_unpack[4],event_number,input_file))
+    #     nwarnings = nwarnings+1
+    
+    return header_unpack[3],header_unpack[4]
 
 def get_y_values(input_file,event_number):
     my_file = open(input_file, 'rb')
@@ -72,6 +81,7 @@ def get_calibrated_x_axis(input_file,event_number,channel_number,trigger_cell):
         chip_number = channel_number-24
 
     zeroth_channel_in_chip = chip_number * 8
+  
     t0_ch0_this_chip = 0
     for i in range((1024 - trigger_cell) % 1024):
         t0_ch0_this_chip += cell_dt_array[zeroth_channel_in_chip][(i+trigger_cell)%1024]
@@ -82,6 +92,14 @@ def get_calibrated_x_axis(input_file,event_number,channel_number,trigger_cell):
        t0_this_ch += cell_dt_array[channel_number][(i+trigger_cell)%1024]    
 
     adjustment = t0_this_ch - t0_ch0_this_chip
+    
+    #### Ryan's alternate adjustment
+    # t0_ch0_this_chip = 0
+    # t0_this_ch = 0
+    # for i in range(trigger_cell):
+    #     t0_ch0_this_chip += cell_dt_array[zeroth_channel_in_chip][i%1024]
+    #     t0_this_ch += cell_dt_array[channel_number][i%1024]
+    # adjustment = t0_this_ch - t0_ch0_this_chip
     
     x_axis = np.zeros([samples_per_frame],dtype=np.float32)
     ### define time axis starting from 0, given trigger_cell for this chip
@@ -168,10 +186,12 @@ outTree = TTree("pulse","pulse")
 i_evt = np.zeros(1,dtype=np.dtype("u4"))
 channel = np.zeros([nchan_tot,samples_per_frame],dtype=np.float32)
 trigger_cell = np.zeros([nchan_tot],dtype=np.dtype("u4"))
+v1742_event = np.zeros([nchan_tot],dtype=np.dtype("u4"))
 time_array = np.zeros([nchan_tot,samples_per_frame],dtype=np.float32)
 
 outTree.Branch('i_evt',i_evt,'i_evt/i')
 outTree.Branch('trigger_cell',trigger_cell,'trigger_cell[%i]/i'%nchan_tot)
+outTree.Branch('v1742_event',v1742_event,'v1742_event[%i]/i'%nchan_tot)
 outTree.Branch('channel', channel, 'channel[%i][%i]/F' %(nchan_tot,samples_per_frame) )
 outTree.Branch('time', time_array, 'time[%i][%i]/F' %(nchan_tot,samples_per_frame) )
 
@@ -192,18 +212,21 @@ load_time_calibrations()
 #         dump_header_info(file_list[ic],i,ic)
 # exit()
 
+print("Expecting {} events.".format(nevents))
 for i in range(nevents):
     if (i%100==0): print("Processing event %i." % i)
     # if i>2: exit()
     for ic in range(nchan_tot):
         this_chan_y = get_y_values(file_list[ic],i)
-        this_trigger_cell = get_trigger_cell(file_list[ic],i,ic)
-        this_chan_x = get_calibrated_x_axis(file_list[ic],i,ic,this_trigger_cell)
+        this_trigger_cell,this_event = get_trigger_cell_and_event(file_list[ic],i,ic,nwarnings)
+        if not skip_time_calibration: this_chan_x = get_calibrated_x_axis(file_list[ic],i,ic,this_trigger_cell)
+        else: this_chan_x = uncalibrated_time_axis
         # if(ic==1): compare_adjustments(file_list[ic],i,ic,this_trigger_cell)
         #print(this_chan_y)
         channel[ic] = this_chan_y
         time_array[ic] = this_chan_x
         trigger_cell[ic] = this_trigger_cell
+        v1742_event[ic] = this_event
     
     
     i_evt[0] = i
