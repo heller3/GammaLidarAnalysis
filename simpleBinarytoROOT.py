@@ -15,13 +15,13 @@ sampling_rate = 5 #GSa/s
 samples_per_header = 6 ## e.g. number of 4 byte chunks in header
 sample_length = 4 #bytes
 ADC_to_mV = 1000./4096.
-# data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
-data_path = "/Users/heller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run 3 Beam Monitor OUT/"
-# data_path = "/Users/heller/Google Drive/Shared drives/BGO TOF-PET/Data/V1742 Calibration Work/8-20-2021/"
+# data_path = "/Users/rheller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run2 BeamMonitor OUT/"
+data_path = "/Users/rheller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Backscatter Day 2/8-31-22/Run 3 Beam Monitor OUT/"
+# data_path = "/Users/rheller/Google Drive/Shared drives/BGO TOF-PET/Data/V1742 Calibration Work/8-20-2021/"
 time_calibration_file = "V1742_tcal_v2"
 time_calibration_file_triggers = "V1742_trigger_tcal_v1"
 skip_time_calibration=False
-output_file = "Aug31_Run3_calibrated_apr14_Ryan_inter.root"
+output_file = "Aug31_Run3_May1.root"
 
 if skip_time_calibration: output_file = output_file.replace(".root","_uncal.root")
 
