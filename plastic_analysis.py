@@ -56,7 +56,7 @@ plot_definitions = [
     "draw_opt":"",
     "hist_list":[
         {
-        "variable":"LP2_20[0]-LP2_20[7]",
+        "variable":"LP2_20[0]-LP2_20[7]", ###LP2_20[0] is the CFD 20% on channel 0
         "selection":"LP2_20[0]!=0 && LP2_20[7]!=0",
         "legend":"Start detectors",
         "color_index":2,
