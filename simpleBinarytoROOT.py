@@ -21,7 +21,7 @@ data_path = "/Users/rheller/Google Drive/Shared drives/Gamma-Ray LIDAR/Data/Back
 time_calibration_file = "V1742_tcal_v2"
 time_calibration_file_triggers = "V1742_trigger_tcal_v1"
 skip_time_calibration=False
-output_file = "Aug31_Run3_May1.root"
+output_file = "Aug31_Run3_May1_debug.root"
 
 if skip_time_calibration: output_file = output_file.replace(".root","_uncal.root")
 
@@ -111,6 +111,7 @@ def get_calibrated_x_axis(input_file,event_number,channel_number,trigger_cell):
     return x_axis
 
 def compare_adjustments(input_file,event_number,channel_number,trigger_cell):
+    print("comparing adjustments")
     time_array = np.zeros([nchan,samples_per_frame],dtype=np.float32)
     for chan in range(nchan):
         for i in range(1024):
@@ -118,7 +119,7 @@ def compare_adjustments(input_file,event_number,channel_number,trigger_cell):
                 time_array[chan][i] += cell_dt_array[chan][(j+trigger_cell) % 1024]
 
     t1 = time_array[0][(1024-trigger_cell) % 1024]
-    t2 = time_array[1][(1024-trigger_cell) % 1024]
+    t2 = time_array[channel_number][(1024-trigger_cell) % 1024]
 
     adjustment_jinr = t2-t1
 
@@ -136,6 +137,15 @@ def compare_adjustments(input_file,event_number,channel_number,trigger_cell):
 
     adjustment = t0_this_ch - t0_ch0_this_chip
 
+    #### Ryan's alternate adjustment
+    t0_ch0_this_chip = 0
+    t0_this_ch = 0
+    for i in range(trigger_cell):
+        t0_ch0_this_chip += cell_dt_array[zeroth_channel_in_chip][i%1024]
+        t0_this_ch += cell_dt_array[channel_number][i%1024]
+    adjustment_from_beginning = -t0_this_ch + t0_ch0_this_chip
+
+
     x_axis =[]
     ### define time axis starting from 0, given trigger_cell for this chip
     this_time = 0 - adjustment
@@ -144,9 +154,9 @@ def compare_adjustments(input_file,event_number,channel_number,trigger_cell):
         x_axis.append(this_time*1.0e-9)
         this_time += cell_dt_array[channel_number][(i+trigger_cell) % 1024]
         
-    if channel_number==1:
-        print("Adjustment JINR vs Me: {} vs {}".format(adjustment_jinr,adjustment))
-        for i in range(6): print("{} vs {}".format(time_array[1][i],x_axis[i]))
+  
+    print("Adjustment JINR vs Me vs beginning: {} vs {} vs {}".format(adjustment_jinr,adjustment,adjustment_from_beginning))
+    for i in range(6): print("{} vs {}".format(time_array[1][i],x_axis[i]))
 
 
 def test_end_of_file(input_file):
@@ -217,11 +227,12 @@ for i in range(nevents):
     if (i%100==0): print("Processing event %i." % i)
     # if i>2: exit()
     for ic in range(nchan_tot):
+        # if ic!=7: continue
         this_chan_y = get_y_values(file_list[ic],i)
         this_trigger_cell,this_event = get_trigger_cell_and_event(file_list[ic],i,ic,nwarnings)
         if not skip_time_calibration: this_chan_x = get_calibrated_x_axis(file_list[ic],i,ic,this_trigger_cell)
         else: this_chan_x = uncalibrated_time_axis
-        # if(ic==1): compare_adjustments(file_list[ic],i,ic,this_trigger_cell)
+        # if(ic==7): compare_adjustments(file_list[ic],i,ic,this_trigger_cell)
         #print(this_chan_y)
         channel[ic] = this_chan_y
         time_array[ic] = this_chan_x

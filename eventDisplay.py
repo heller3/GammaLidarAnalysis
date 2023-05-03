@@ -55,10 +55,15 @@ chain.SetLineColor(utils.colors[2])
 chain.SetMarkerColor(utils.colors[2])
 chain.Draw("channel[0]:1e9*time[0]>>h_start","i_evt=={}".format(event_number),"lp same")
 
+chain.SetLineColor(utils.colors[1])
+chain.SetMarkerColor(utils.colors[1])
+chain.Draw("channel[7]:1e9*time[0]>>h_start2","i_evt=={}".format(event_number),"lp same")
+
 chain.SetLineColor(utils.colors[3])
 chain.SetMarkerColor(utils.colors[3])
 chain.Draw("channel[4]:1e9*time[4]>>h_plastic_time","i_evt=={}".format(event_number),"lp same")
 h_start=ROOT.h_start
+h_start2=ROOT.h_start2
 h_plastic_time=ROOT.h_plastic_time
 h_plastic_energy=ROOT.h_plastic_energy
 latex= ROOT.TLatex()
@@ -72,6 +77,8 @@ tree = input_file.Get("pulse")
 tree.GetEntry(int(event_number))
 timestamp_start = tree.LP2_50[0]*1e9
 timestamp_start_200mV = tree.LP2_200mV[0]*1e9 
+timestamp_start2 = tree.LP2_50[7]*1e9
+timestamp_start2_200mV = tree.LP2_200mV[7]*1e9 
 timestamp_plastic = tree.LP2_50[4]*1e9
 timestamp_plastic_100mV = tree.LP2_100mV[4]*1e9
 timestamp_plastic_700mV = tree.LP2_700mV[4]*1e9
@@ -83,8 +90,17 @@ if center_in_ns != -1: ### draw line at timestamp for zoomed plot
     line_start.SetLineColor(utils.colors[2])
     line_start.SetLineStyle(7)
     line_start.SetLineWidth(2)
-    line_start.DrawLine(timestamp_start,-1200,timestamp_start,200)
+    # line_start.DrawLine(timestamp_start,-1200,timestamp_start,200)
     line_start.DrawLine(timestamp_start_200mV,-1200,timestamp_start_200mV,200)
+    
+    
+    line_start2 = ROOT.TLine()
+    line_start2.SetLineColor(utils.colors[1])
+    line_start2.SetLineStyle(7)
+    line_start2.SetLineWidth(2)
+    # line_start.DrawLine(timestamp_start,-1200,timestamp_start,200)
+    line_start2.DrawLine(timestamp_start2_200mV,-1200,timestamp_start2_200mV,200)
+
 
     line_plastic = ROOT.TLine()
     line_plastic.SetLineColor(utils.colors[3])
@@ -96,8 +112,10 @@ if center_in_ns != -1: ### draw line at timestamp for zoomed plot
 # if center_in_ns != -1:
 leg = ROOT.TLegend(0.15,0.68,0.85,0.87)
 leg.AddEntry(h_plastic_energy,"Plastic energy (x20), {:.1f} keV".format(energy_plastic),"lp")
-leg.AddEntry(h_plastic_time,"Plastic, 50% CFD: {:.1f} ns, #DeltaT(100, 700 mV): {:.1f} ns)".format(timestamp_plastic,-timestamp_plastic_100mV+timestamp_plastic_700mV),"lp")
-leg.AddEntry(h_start,"Start time at 200 mV: {:.2f} ns".format(timestamp_start_200mV),"lp")
+leg.AddEntry(h_plastic_time,"Plastic time, 50% CFD: {:.1f} ns".format(timestamp_plastic),"lp")
+# leg.AddEntry(h_plastic_time,"Plastic time, 50% CFD: {:.1f} ns, #DeltaT(100, 700 mV): {:.1f} ns)".format(timestamp_plastic,-timestamp_plastic_100mV+timestamp_plastic_700mV),"lp")
+leg.AddEntry(h_start,"Start #1, LE at 200 mV: {:.2f} ns".format(timestamp_start_200mV),"lp")
+leg.AddEntry(h_start2,"Start #2, LE at 200 mV: {:.2f} ns".format(timestamp_start2_200mV),"lp")
 # else:
 #     leg = ROOT.TLegend(0.17,0.68,0.48,0.87)
 #     leg.AddEntry(h_plastic,"Plastic scintillator","lp")
